@@ -819,7 +819,7 @@ public class Eyes extends EyesBase {
         By targetSelector = seleniumCheckTarget.getTargetSelector();
         WebElement targetElement = seleniumCheckTarget.getTargetElement();
         if (targetElement == null && targetSelector != null) {
-            targetElement = this.driver.findElement(targetSelector);
+            targetElement = getEyesDriver().findElement(targetSelector);
         }
         return targetElement;
     }
@@ -893,7 +893,7 @@ public class Eyes extends EyesBase {
         }
 
         while (switchedToFrameCount > 0) {
-            this.driver.switchTo().parentFrame();
+            getEyesDriver().switchTo().parentFrame();
             switchedToFrameCount--;
         }
 
@@ -944,7 +944,7 @@ public class Eyes extends EyesBase {
     }
 
     private boolean switchToFrame(ISeleniumFrameCheckTarget frameTarget) {
-        WebDriver.TargetLocator switchTo = this.driver.switchTo();
+        WebDriver.TargetLocator switchTo = getEyesDriver().switchTo();
 
         if (frameTarget.getFrameIndex() != null) {
             switchTo.frame(frameTarget.getFrameIndex());
@@ -965,7 +965,7 @@ public class Eyes extends EyesBase {
         }
 
         if (frameTarget.getFrameSelector() != null) {
-            WebElement frameElement = this.driver.findElement(frameTarget.getFrameSelector());
+            WebElement frameElement = getEyesDriver().findElement(frameTarget.getFrameSelector());
             if (frameElement != null) {
                 switchTo.frame(frameElement);
                 return true;
@@ -2050,7 +2050,7 @@ public class Eyes extends EyesBase {
         }
         if (this.hideScrollbars || (this.stitchMode == StitchMode.CSS && stitchContent)) {
             if (rootElementForHidingScrollbars == null) {
-                rootElementForHidingScrollbars = EyesSeleniumUtils.selectRootElement(this.driver);
+                rootElementForHidingScrollbars = EyesSeleniumUtils.selectRootElement(getEyesDriver());
             }
             FrameChain originalFC = driver.getFrameChain().clone();
             FrameChain fc = driver.getFrameChain().clone();
@@ -2060,13 +2060,13 @@ public class Eyes extends EyesBase {
                     if (frame != null) {
                         frame.hideScrollbars();
                     } else {
-                        EyesSeleniumUtils.hideScrollbars(this.driver, 200, rootElementForHidingScrollbars);
+                        EyesSeleniumUtils.hideScrollbars(getEyesDriver(), 200, rootElementForHidingScrollbars);
                     }
                 }
                 driver.getRemoteWebDriver().switchTo().parentFrame();
                 fc.pop();
             }
-            this.originalOverflow = EyesSeleniumUtils.hideScrollbars(this.driver, 200, rootElementForHidingScrollbars);
+            this.originalOverflow = EyesSeleniumUtils.hideScrollbars(getEyesDriver(), 200, rootElementForHidingScrollbars);
             ((EyesTargetLocator) driver.switchTo()).frames(originalFC);
             return originalFC;
         }
@@ -2078,7 +2078,7 @@ public class Eyes extends EyesBase {
             return;
         }
         if (rootElementForHidingScrollbars == null) {
-            rootElementForHidingScrollbars = EyesSeleniumUtils.selectRootElement(this.driver);
+            rootElementForHidingScrollbars = EyesSeleniumUtils.selectRootElement(getEyesDriver());
         }
         if (this.hideScrollbars || (this.stitchMode == StitchMode.CSS && stitchContent)) {
             ((EyesTargetLocator) driver.switchTo()).frames(frameChain);
@@ -2089,7 +2089,7 @@ public class Eyes extends EyesBase {
                 frame.returnToOriginalOverflow();
                 driver.getRemoteWebDriver().switchTo().parentFrame();
             }
-            EyesSeleniumUtils.setOverflow(this.driver, originalOverflow, rootElementForHidingScrollbars);
+            EyesSeleniumUtils.setOverflow(getEyesDriver(), originalOverflow, rootElementForHidingScrollbars);
             ((EyesTargetLocator) driver.switchTo()).frames(originalFC);
         }
         driver.getFrameChain().clear();
