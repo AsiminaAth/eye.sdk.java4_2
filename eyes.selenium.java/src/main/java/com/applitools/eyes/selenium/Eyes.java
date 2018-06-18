@@ -355,7 +355,7 @@ public class Eyes extends EyesBase {
         setJsExecutor(new SeleniumJavaScriptExecutor(getEyesDriver()));
         initPositionProvider();
 
-        getEyesDriver().setRotation(rotation);
+        getEyesDriver().setRotation(getRotation());
         return getEyesDriver();
     }
 
