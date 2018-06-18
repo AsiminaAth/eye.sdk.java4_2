@@ -345,8 +345,9 @@ public class Eyes extends EyesBase {
 
         setUserAgent(UserAgent.ParseUserAgentString(getEyesDriver().getUserAgent(), true));
 
-        imageProvider = ImageProviderFactory.getImageProvider(getUserAgent(), this, logger, (TakesScreenshot) getDriver());
-        regionPositionCompensation = RegionPositionCompensationFactory.getRegionPositionCompensation(getUserAgent(), this, logger);
+        initImageProvider();
+        regionPositionCompensation = RegionPositionCompensationFactory.getRegionPositionCompensation(getUserAgent(),
+                this, logger);
 
         openBase(appName, testName, viewportSize, sessionType);
         ArgumentGuard.notNull(driver, "driver");
@@ -359,7 +360,12 @@ public class Eyes extends EyesBase {
         return getEyesDriver();
     }
 
-    private void initDriver(WebDriver driver) {
+    protected void initImageProvider() {
+        imageProvider = ImageProviderFactory.getImageProvider(getUserAgent(), this, logger,
+                (TakesScreenshot) getDriver());
+    }
+
+    protected void initDriver(WebDriver driver) {
         if (driver instanceof RemoteWebDriver) {
             this.driver = new EyesWebDriver(logger, this, (RemoteWebDriver) driver);
         } else if (driver instanceof EyesWebDriver) {
@@ -375,7 +381,7 @@ public class Eyes extends EyesBase {
         }
     }
 
-    private void initPositionProvider() {
+    protected void initPositionProvider() {
         // Setting the correct position provider.
         StitchMode stitchMode = getStitchMode();
         logger.verbose("initializing position provider. stitchMode: " + stitchMode);
