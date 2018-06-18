@@ -94,6 +94,7 @@ public class Eyes extends EyesBase {
     private int waitBeforeScreenshots;
     private PropertyHandler<RegionVisibilityStrategy> regionVisibilityStrategyHandler;
     private ElementPositionProvider elementPositionProvider;
+
     private SeleniumJavaScriptExecutor jsExecutor;
 
     private UserAgent userAgent;
@@ -149,9 +150,29 @@ public class Eyes extends EyesBase {
         this(getDefaultServerUrl());
     }
 
+    protected SeleniumJavaScriptExecutor getJsExecutor() {
+        return jsExecutor;
+    }
+
+    protected void setJsExecutor(SeleniumJavaScriptExecutor jsExecutor) {
+        this.jsExecutor = jsExecutor;
+    }
+
+    protected UserAgent getUserAgent() {
+        return userAgent;
+    }
+
+    protected void setUserAgent(UserAgent userAgent) {
+        this.userAgent = userAgent;
+    }
+
     @Override
     public String getBaseAgentId() {
         return "eyes.selenium.java/3.33.1";
+    }
+
+    public EyesWebDriver getEyesDriver() {
+        return driver;
     }
 
     public WebDriver getDriver() {
@@ -320,25 +341,22 @@ public class Eyes extends EyesBase {
 
         initDriver(driver);
 
-        screenshotFactory = new EyesWebDriverScreenshotFactory(logger, this.driver);
+        screenshotFactory = new EyesWebDriverScreenshotFactory(logger, getEyesDriver());
 
-        String uaString = this.driver.getUserAgent();
-        if (uaString != null) {
-            userAgent = UserAgent.ParseUserAgentString(uaString, true);
-        }
+        setUserAgent(UserAgent.ParseUserAgentString(getEyesDriver().getUserAgent(), true));
 
-        imageProvider = ImageProviderFactory.getImageProvider(userAgent, this, logger, this.driver);
-        regionPositionCompensation = RegionPositionCompensationFactory.getRegionPositionCompensation(userAgent, this, logger);
+        imageProvider = ImageProviderFactory.getImageProvider(getUserAgent(), this, logger, (TakesScreenshot) getDriver());
+        regionPositionCompensation = RegionPositionCompensationFactory.getRegionPositionCompensation(getUserAgent(), this, logger);
 
         openBase(appName, testName, viewportSize, sessionType);
         ArgumentGuard.notNull(driver, "driver");
 
         devicePixelRatio = UNKNOWN_DEVICE_PIXEL_RATIO;
-        this.jsExecutor = new SeleniumJavaScriptExecutor(this.driver);
+        setJsExecutor(new SeleniumJavaScriptExecutor(getEyesDriver()));
         initPositionProvider();
 
-        this.driver.setRotation(rotation);
-        return this.driver;
+        getEyesDriver().setRotation(rotation);
+        return getEyesDriver();
     }
 
     private void initDriver(WebDriver driver) {
@@ -363,10 +381,10 @@ public class Eyes extends EyesBase {
         logger.verbose("initializing position provider. stitchMode: " + stitchMode);
         switch (stitchMode) {
             case CSS:
-                setPositionProvider(new CssTranslatePositionProvider(logger, this.jsExecutor));
+                setPositionProvider(new CssTranslatePositionProvider(logger, getJsExecutor()));
                 break;
             default:
-                setPositionProvider(new ScrollPositionProvider(logger, this.jsExecutor));
+                setPositionProvider(new ScrollPositionProvider(logger, getJsExecutor()));
         }
     }
 
@@ -1059,7 +1077,7 @@ public class Eyes extends EyesBase {
         FrameChain originalFrameChain = driver.getFrameChain().clone();
         EyesTargetLocator switchTo = (EyesTargetLocator) driver.switchTo();
         switchTo.defaultContent();
-        ScrollPositionProvider spp = new ScrollPositionProvider(logger, jsExecutor);
+        ScrollPositionProvider spp = new ScrollPositionProvider(logger, getJsExecutor());
         Location location = null;
         try {
             location = spp.getCurrentPosition();
@@ -1445,7 +1463,7 @@ public class Eyes extends EyesBase {
             ScaleProviderFactory factory;
             logger.verbose("Trying to extract device pixel ratio...");
             try {
-                devicePixelRatio = EyesSeleniumUtils.getDevicePixelRatio(this.jsExecutor);
+                devicePixelRatio = EyesSeleniumUtils.getDevicePixelRatio(getJsExecutor());
             } catch (Exception e) {
                 logger.verbose(
                         "Failed to extract device pixel ratio! Using default.");
@@ -1722,7 +1740,7 @@ public class Eyes extends EyesBase {
         ensureElementVisible(targetElement);
 
         PositionProvider originalPositionProvider = positionProvider;
-        PositionProvider scrollPositionProvider = new ScrollPositionProvider(logger, jsExecutor);
+        PositionProvider scrollPositionProvider = new ScrollPositionProvider(logger, getJsExecutor());
         Location originalScrollPosition = scrollPositionProvider.getCurrentPosition();
 
         String originalOverflow = null;
@@ -2184,7 +2202,7 @@ public class Eyes extends EyesBase {
     private FullPageCaptureAlgorithm createFullPageCaptureAlgorithm(ScaleProviderFactory scaleProviderFactory) {
         return new FullPageCaptureAlgorithm(logger, regionPositionCompensation,
                 getWaitBeforeScreenshots(), debugScreenshotsProvider, screenshotFactory,
-                new ScrollPositionProvider(logger, this.jsExecutor),
+                new ScrollPositionProvider(logger, getJsExecutor()),
                 scaleProviderFactory,
                 cutProviderHandler.get(),
                 getStitchOverlap(),
@@ -2207,7 +2225,7 @@ public class Eyes extends EyesBase {
 
     @Override
     protected String getInferredEnvironment() {
-        String userAgent = driver.getUserAgent();
+        String userAgent = getEyesDriver().getUserAgent();
         if (userAgent != null) {
             return "useragent:" + userAgent;
         }
